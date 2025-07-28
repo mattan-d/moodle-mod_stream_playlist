@@ -121,11 +121,6 @@ function stream_get_coursemodule_info($cm) {
       return null;
   }
   $info = new \completion_info($cm);
-  if ($stream->intro) {
-      // In Moodle 4.0+, the intro is set to the 'description' property.
-      // The set_name() and set_intro() methods have been removed.
-      $info->description = format_module_intro('stream', $stream, $cm->id);
-  }
   return $info;
 }
 
