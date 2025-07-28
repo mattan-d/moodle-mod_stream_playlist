@@ -68,4 +68,4 @@ $string['topic'] = 'Video Topic';
 $string['topic_help'] = 'the video topic from stream server.';
 $string['upload'] = 'Upload';
 $string['views'] = 'Views';
-$string['viewed] = 'Viewed';
+$string['viewed'] = 'Viewed';
