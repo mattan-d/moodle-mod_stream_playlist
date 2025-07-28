@@ -27,6 +27,7 @@
  *
  * @param int $oldversion
  * @return bool
+ * @throws ddl_exception
  */
 function xmldb_stream_upgrade($oldversion) {
     global $DB;
@@ -50,6 +51,43 @@ function xmldb_stream_upgrade($oldversion) {
 
         // Stream savepoint reached.
         upgrade_mod_savepoint(true, 2024121101, 'stream');
+    }
+
+    if ($oldversion < 2024121102) {
+        // Define table stream to be altered.
+        $table = new xmldb_table('stream');
+        $field = new xmldb_field('grade', XMLDB_TYPE_INTEGER, '10', true, null, false, '100', 'introformat');
+
+        // Conditionally launch add field grade.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define table stream_viewed_videos to be created.
+        $table = new xmldb_table('stream_viewed_videos');
+
+        // Adding fields to table stream_viewed_videos.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('streamid', XMLDB_TYPE_INTEGER, '10', true, XMLDB_NOTNULL, null, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', true, XMLDB_NOTNULL, null, null);
+        $table->add_field('videoid', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timeviewed', XMLDB_TYPE_INTEGER, '10', true, XMLDB_NOTNULL, null, null);
+
+        // Adding keys to table stream_viewed_videos.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('streamid', XMLDB_KEY_FOREIGN, ['streamid'], 'stream', 'id');
+        $table->add_key('userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', 'id');
+
+        // Adding indexes to table stream_viewed_videos.
+        $table->add_index('stream_user_video', XMLDB_INDEX_UNIQUE, ['streamid', 'userid', 'videoid']);
+
+        // Conditionally launch create table for stream_viewed_videos.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Stream savepoint reached.
+        upgrade_mod_savepoint(true, 2024121102, 'stream');
     }
 
     return true;

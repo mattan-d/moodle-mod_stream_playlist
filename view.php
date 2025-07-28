@@ -81,6 +81,18 @@ if (empty($identifiers)) {
 
 $videos = mod_stream\stream_video::get_videos_by_id($identifiers);
 
+// Get viewed videos for the current user.
+list($usql, $params) = $DB->get_in_or_equal(array_column($videos, 'id'), SQL_PARAMS_NAMED, 'video');
+$params['userid'] = $USER->id;
+$params['streamid'] = $stream->id;
+$viewedvideos = $DB->get_records_sql("SELECT videoid FROM {stream_viewed_videos}
+                                      WHERE userid = :userid AND streamid = :streamid AND videoid $usql", $params);
+$viewedvideoids = array_keys($viewedvideos);
+
+foreach ($videos as $video) {
+    $video->viewed = in_array($video->id, $viewedvideoids);
+}
+
 if (!empty($videos)) {
     $videos[0]->active = true;
 }

@@ -24,8 +24,8 @@
         "cmid": 123,
         "includeaudio": false,
         "videos": [
-            { "id": "vid1", "title": "Video 1", "thumbnail": "url/to/thumb1.jpg", "duration": "10:00", "active": true },
-            { "id": "vid2", "title": "Video 2", "thumbnail": "url/to/thumb2.jpg", "duration": "05:30" }
+            { "id": "vid1", "title": "Video 1", "thumbnail": "url/to/thumb1.jpg", "duration": "10:00", "active": true, "viewed": true },
+            { "id": "vid2", "title": "Video 2", "thumbnail": "url/to/thumb2.jpg", "duration": "05:30", "viewed": false }
         ],
         "initial_player": "<iframe...>"
     }
@@ -41,6 +41,9 @@
                         <div class="playlist-item-title">{{title}}</div>
                         <div class="playlist-item-duration">{{duration}}</div>
                     </div>
+                    {{#viewed}}
+                        <span class="badge badge-success playlist-viewed-badge">{{#str}}viewed, core{{/str}}</span>
+                    {{/viewed}}
                 </div>
             </li>
             {{/videos}}

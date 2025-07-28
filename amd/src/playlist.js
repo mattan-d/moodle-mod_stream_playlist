@@ -1,4 +1,4 @@
-define(["jquery", "core/ajax"], ($, ajax) => ({
+define(["jquery", "core/ajax", "core/str"], ($, ajax, str) => ({
   init: () => {
     $(".playlist-item").on("click", function () {
       var playlistItem = $(this)
@@ -22,6 +22,28 @@ define(["jquery", "core/ajax"], ($, ajax) => ({
         '<div class="loading-overlay"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div></div>',
       )
 
+      // Mark as viewed
+      ajax
+        .call([
+          {
+            methodname: "mod_stream_mark_as_viewed",
+            args: {
+              cmid: cmid,
+              videoid: identifier,
+            },
+          },
+        ])[0]
+        .done(() => {
+          if (!playlistItem.find(".playlist-viewed-badge").length) {
+            str.get_string("viewed", "core").then((viewedString) => {
+              playlistItem
+                .find(".playlist-item-content")
+                .append('<span class="badge badge-success playlist-viewed-badge">' + viewedString + "</span>")
+            })
+          }
+        })
+
+      // Load player
       ajax
         .call([
           {

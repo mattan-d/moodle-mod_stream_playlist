@@ -273,6 +273,7 @@
 
 .playlist-item-details {
   overflow: hidden;
+  flex-grow: 1;
 }
 
 .playlist-item-title {
@@ -285,6 +286,11 @@
 .playlist-item-duration {
   font-size: 0.9em;
   color: #6c757d;
+}
+
+.playlist-viewed-badge {
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .loading-overlay {

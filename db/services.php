@@ -39,4 +39,11 @@ $functions = [
                 'type' => 'read',
                 'ajax' => true,
         ],
+        'mod_stream_mark_as_viewed' => [
+                'classname' => 'mod_stream\external\tracker',
+                'methodname' => 'mark_as_viewed',
+                'description' => 'Marks a video as viewed for the current user and updates the grade.',
+                'type' => 'write',
+                'ajax' => true,
+        ],
 ];

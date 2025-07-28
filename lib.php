@@ -38,7 +38,7 @@ function stream_supports($feature) {
         case FEATURE_SHOW_DESCRIPTION:
             return true;
         case FEATURE_GRADE_HAS_GRADE:
-            return false;
+            return true;
         case FEATURE_BACKUP_MOODLE2:
             return true;
         default:
@@ -48,11 +48,6 @@ function stream_supports($feature) {
 
 /**
  * Saves a new instance of the stream into the database
- *
- * Given an object containing all the necessary data,
- * (defined by the form in mod_form.php) this function
- * will create a new instance and return the id number
- * of the new instance.
  *
  * @param stdClass $stream Submitted data from the form in mod_form.php
  * @param mod_stream_mod_form $mform The form instance itself (if needed)
@@ -64,15 +59,13 @@ function stream_add_instance(stdClass $stream, $mform = null) {
     $stream->timecreated = time();
     $stream->id = $DB->insert_record('stream', $stream);
 
+    stream_grade_item_update($stream);
+
     return $stream->id;
 }
 
 /**
  * Updates an instance of the stream in the database
- *
- * Given an object containing all the necessary data,
- * (defined by the form in mod_form.php) this function
- * will update an existing instance with new data.
  *
  * @param stdClass $stream An object from the form in mod_form.php
  * @param mod_stream_mod_form $mform The form instance itself (if needed)
@@ -86,15 +79,13 @@ function stream_update_instance(stdClass $stream, $mform = null) {
 
     $result = $DB->update_record('stream', $stream);
 
+    stream_grade_item_update($stream);
+
     return $result;
 }
 
 /**
  * Removes an instance of the stream from the database
- *
- * Given an ID of an instance of this module,
- * this function will permanently delete the instance
- * and any data that depends on it.
  *
  * @param int $id Id of the module instance
  * @return boolean Success/Failure
@@ -106,7 +97,99 @@ function stream_delete_instance($id) {
         return false;
     }
 
+    $DB->delete_records('stream_viewed_videos', ['streamid' => $stream->id]);
     $DB->delete_records('stream', ['id' => $stream->id]);
 
+    stream_grade_item_update($stream, null, true);
+
     return true;
+}
+
+/**
+ * Given a course_module object, this function returns any
+ * "extra" information that may be needed when printing
+ * a daily link to the activity.
+ *
+ * @param stdClass $cm
+ * @return \completion_info|null
+ * @throws \dml_exception
+ */
+function stream_get_coursemodule_info($cm) {
+    global $DB;
+
+    if (!$stream = $DB->get_record('stream', array('id' => $cm->instance), 'id, name, intro, introformat')) {
+        return null;
+    }
+    $info = new \completion_info();
+    $info->set_name($stream->name);
+    if ($stream->intro) {
+        $info->set_intro(format_module_intro('stream', $stream, $cm->id));
+    }
+    return $info;
+}
+
+/**
+ * Update the grade for a user in a stream activity.
+ *
+ * @param object $stream The stream activity object.
+ * @param int $userid The ID of the user to update the grade for.
+ * @param bool $batch If true, we are in batch update, so we don't need to fetch the grade item.
+ * @return void
+ * @throws dml_exception
+ */
+function stream_update_grades($stream, $userid, $batch = false) {
+    if (empty($stream->grade)) {
+        return; // No grading for this activity.
+    }
+
+    $totalvideos = count(array_filter(explode(',', $stream->identifier)));
+    if ($totalvideos == 0) {
+        return; // Avoid division by zero.
+    }
+
+    global $DB;
+    $viewedcount = $DB->count_records('stream_viewed_videos', ['streamid' => $stream->id, 'userid' => $userid]);
+
+    $fraction = $viewedcount / $totalvideos;
+    $newgrade = $fraction * $stream->grade;
+
+    $grades = new \stdClass();
+    $grades->userid = $userid;
+    $grades->rawgrade = $newgrade;
+
+    stream_grade_item_update($stream, $grades);
+}
+
+/**
+ * Create, update or delete grade item for given stream
+ *
+ * @param object $stream object with extra cmidnumber
+ * @param mixed $grades optional array/object of grade(s); 'null' means grade item is being updated
+ * @param bool $delete if true, the grade item will be deleted
+ * @return int grade_item id
+ */
+function stream_grade_item_update($stream, $grades = null, $delete = false) {
+    global $CFG;
+    require_once($CFG->libdir.'/gradelib.php');
+
+    $item = array();
+    $item['itemname'] = $stream->name;
+    $item['idnumber'] = $stream->id; // Fallback for $cm->idnumber.
+    if (isset($stream->cmidnumber)) {
+        $item['idnumber'] = $stream->cmidnumber;
+    }
+
+    if ($delete) {
+        return grade_update('mod/stream', $stream->course, 'mod', 'stream', $stream->id, 0, null, $item, ['deleted' => 1]);
+    }
+
+    if (!empty($stream->grade)) {
+        $item['gradetype'] = GRADE_TYPE_VALUE;
+        $item['grademax']  = $stream->grade;
+        $item['grademin']  = 0;
+    } else {
+        $item['gradetype'] = GRADE_TYPE_NONE;
+    }
+
+    return grade_update('mod/stream', $stream->course, 'mod', 'stream', $stream->id, 0, $grades, $item);
 }
