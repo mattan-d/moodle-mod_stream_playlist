@@ -35,7 +35,7 @@ define(["jquery", "core/ajax", "core/str"], ($, ajax, str) => ({
         ])[0]
         .done(() => {
           if (!playlistItem.find(".playlist-viewed-badge").length) {
-            str.get_string("viewed", "core").then((viewedString) => {
+            str.get_string("viewed", "mod_stream").then((viewedString) => {
               playlistItem
                 .find(".playlist-item-content")
                 .append('<span class="badge badge-success playlist-viewed-badge">' + viewedString + "</span>")
