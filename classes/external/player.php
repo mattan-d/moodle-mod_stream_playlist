@@ -31,6 +31,7 @@ use external_value;
 use context_module;
 
 defined('MOODLE_INTERNAL') || die();
+require_once($CFG->libdir . '/externallib.php');
 
 require_once($CFG->dirroot . '/mod/stream/locallib.php');
 
@@ -54,7 +55,7 @@ class player extends external_api {
         $cm = get_coursemodule_from_id('stream', $params['cmid'], 0, false, MUST_EXIST);
         $context = context_module::instance($cm->id);
         self::validate_context($context);
-        require_capability('mod/stream:view', $context);
+        //require_capability('mod/stream:view', $context);
 
         return [
             'html' => \mod_stream\stream_video::player($params['cmid'], $params['identifier'], $params['includeaudio'])

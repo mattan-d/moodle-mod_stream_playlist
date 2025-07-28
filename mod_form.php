@@ -55,9 +55,9 @@ class mod_stream_mod_form extends moodleform_mod {
         $mform->addRule('name', null, 'required', null, 'client');
         $mform->addRule('name', get_string('maximumchars', '', 255), 'maxlength', 255, 'client');
 
-        $mform->addElement('hidden', 'identifier');
+        $mform->addElement('text', 'identifier', get_string('identifier', 'stream'), ['size' => '255', 'readonly' => true]);
         $mform->setType('identifier', PARAM_TEXT);
-        $mform->addRule('identifier', null, 'required', null, 'client');
+        $mform->addHelpButton('identifier', 'identifier', 'stream');
 
         $this->standard_intro_elements();
         $mform->addElement('html', $OUTPUT->render_from_template('mod_stream/search', [
