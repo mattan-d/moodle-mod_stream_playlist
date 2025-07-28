@@ -21,9 +21,6 @@
  * @copyright  2024 mattandor <mattan@centricapp.co.il>
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-var define = window.define // Declare the define variable
-
 define(["jquery", "core/ajax", "core/notification", "core/str", "core/url"], ($, ajax, notification, str, url) => ({
   init: function () {
     var self = this
