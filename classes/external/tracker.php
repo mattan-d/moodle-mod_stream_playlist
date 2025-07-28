@@ -55,7 +55,7 @@ class tracker extends external_api {
         $cm = get_coursemodule_from_id('stream', $params['cmid'], 0, false, MUST_EXIST);
         $context = context_module::instance($cm->id);
         self::validate_context($context);
-        require_capability('mod/stream:view', $context);
+        //require_capability('mod/stream:view', $context);
 
         $stream = $DB->get_record('stream', ['id' => $cm->instance], '*', MUST_EXIST);
 
