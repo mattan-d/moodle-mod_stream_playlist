@@ -59,10 +59,6 @@ class mod_stream_mod_form extends moodleform_mod {
         $mform->setType('identifier', PARAM_TEXT);
         $mform->addRule('identifier', null, 'required', null, 'client');
 
-        $mform->addElement('text', 'topic', get_string('topic', 'stream'), ['size' => '255', 'readonly' => true]);
-        $mform->setType('topic', PARAM_TEXT);
-        $mform->addHelpButton('topic', 'topic', 'stream');
-
         $this->standard_intro_elements();
         $mform->addElement('html', $OUTPUT->render_from_template('mod_stream/search', [
                 'endpoint' => get_config('stream', 'apiendpoint'),

@@ -44,7 +44,7 @@ class stream_video {
      * @param string $sort
      *
      * @return array
-     * @throws dml_exception
+     * @throws \dml_exception
      */
     public static function listing($term, $sort) {
         global $USER;
@@ -59,6 +59,40 @@ class stream_video {
     }
 
     /**
+     * Get video details by a list of identifiers.
+     *
+     * @param array $identifiers
+     * @return array
+     * @throws \dml_exception
+     */
+    public static function get_videos_by_id(array $identifiers) {
+        if (empty($identifiers)) {
+            return [];
+        }
+
+        $json = self::call(['ids' => json_encode($identifiers)]);
+        $response = json_decode($json);
+
+        if (isset($response->status) && $response->status === 'success' && !empty($response->videos)) {
+            // Reorder the videos based on the original identifiers array.
+            $videosbyid = [];
+            foreach ($response->videos as $video) {
+                $videosbyid[$video->id] = $video;
+            }
+
+            $orderedvideos = [];
+            foreach ($identifiers as $id) {
+                if (isset($videosbyid[$id])) {
+                    $orderedvideos[] = $videosbyid[$id];
+                }
+            }
+            return $orderedvideos;
+        }
+
+        return [];
+    }
+
+    /**
      * Call for get player code.
      *
      * @param int $cmid
@@ -66,7 +100,7 @@ class stream_video {
      * @param boolean $includeaudio
      *
      * @return string
-     * @throws dml_exception
+     * @throws \dml_exception
      */
     public static function player($cmid, $identifier, $includeaudio = false) {
         global $USER;

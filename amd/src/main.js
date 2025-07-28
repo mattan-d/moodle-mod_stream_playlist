@@ -58,11 +58,9 @@ define(["jquery", "core/ajax", "core/notification", "core/str", "core/url"], ($,
       $("#upload_stream").toggle()
     })
 
-    $("#stream-title-search")
-      .val($("#id_topic").val())
-      .keyup(() => {
-        self.load()
-      })
+    $("#stream-title-search").keyup(() => {
+      self.load()
+    })
 
     this.load()
 
@@ -101,7 +99,6 @@ define(["jquery", "core/ajax", "core/notification", "core/str", "core/url"], ($,
     }
   },
   load: function () {
-    
     var sort = $("#stream-load #stream-sort .btn.active").attr("data-name")
 
     this.elements.html('<div style="text-align:center"><img height="80" src="' + this.loadingbars + '" ></div>')

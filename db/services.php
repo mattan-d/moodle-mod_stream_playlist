@@ -32,4 +32,11 @@ $functions = [
                 'type' => 'read',
                 'ajax' => true,
         ],
+        'mod_stream_get_player' => [
+                'classname' => 'mod_stream\external\player',
+                'methodname' => 'get_player_html',
+                'description' => 'Get the HTML for a stream video player.',
+                'type' => 'read',
+                'ajax' => true,
+        ],
 ];

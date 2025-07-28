@@ -38,7 +38,7 @@ if ($id) {
     $course = $DB->get_record('course', ['id' => $stream->course], '*', MUST_EXIST);
     $cm = get_coursemodule_from_instance('stream', $stream->id, $course->id, false, MUST_EXIST);
 } else {
-    moodle_exception('You must specify a course_module ID or an instance ID');
+    throw new \moodle_exception('You must specify a course_module ID or an instance ID');
 }
 
 require_login($course, true, $cm);
@@ -53,30 +53,48 @@ $event->add_record_snapshot($PAGE->cm->modname, $stream);
 $event->trigger();
 
 $PAGE->set_url('/mod/stream/view.php', ['id' => $cm->id]);
-$PAGE->requires->js_call_amd('mod_stream/main');
+$PAGE->requires->js_call_amd('mod_stream/playlist', 'init');
 $PAGE->set_title(format_string($stream->name));
 $PAGE->set_heading(format_string($course->fullname));
 
 echo $OUTPUT->header();
 
+if (trim(strip_tags($stream->intro))) {
+    echo $OUTPUT->box(format_module_intro('stream', $stream, $cm->id), 'generalbox', 'intro');
+}
+
 $builtinaudioplayerpattern = get_config('stream', 'builtinaudioplayer');
 $includeaudio = false;
 if (isset($builtinaudioplayerpattern) && !empty($builtinaudioplayerpattern) && isset($PAGE->course->shortname)) {
-    if (preg_match($builtinaudioplayerpattern, $PAGE->course->shortname, $matches)) {
+    if (preg_match($builtinaudioplayerpattern, $PAGE->course->shortname)) {
         $includeaudio = true;
     }
 }
 
-$identifiers = explode(',', $stream->identifier);
-$playershtml = '';
-foreach ($identifiers as $identifier) {
-    $identifier = trim($identifier);
-    if (empty($identifier)) {
-        continue;
-    }
-    $playershtml .= mod_stream\stream_video::player($id, $identifier, $includeaudio);
+$identifiers = array_values(array_filter(explode(',', $stream->identifier)));
+
+if (empty($identifiers)) {
+    echo $OUTPUT->notification(get_string('noresults', 'mod_stream'));
+    echo $OUTPUT->footer();
+    exit;
 }
 
-echo $playershtml;
+$videos = mod_stream\stream_video::get_videos_by_id($identifiers);
+
+if (!empty($videos)) {
+    $videos[0]->active = true;
+}
+
+$first_video_identifier = $identifiers[0];
+$initial_player = mod_stream\stream_video::player($cm->id, $first_video_identifier, $includeaudio);
+
+$template_data = [
+    'cmid' => $cm->id,
+    'includeaudio' => $includeaudio,
+    'videos' => $videos,
+    'initial_player' => $initial_player,
+];
+
+echo $OUTPUT->render_from_template('mod_stream/playlist', $template_data);
 
 echo $OUTPUT->footer();
