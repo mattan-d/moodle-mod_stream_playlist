@@ -70,8 +70,8 @@ define(["jquery", "jqueryui", "core/ajax", "core/notification", "core/str", "cor
           self.videoOrder.push(itemid)
         }
       }
-      $("#id_identifier").val(self.selectedIds.join(","))
-      $("#id_video_order").val(JSON.stringify(self.videoOrder))
+      $("input[name=identifier]").val(self.selectedIds.join(","))
+      $("input['video_order']").val(JSON.stringify(self.videoOrder))
       self.updatePlaylistOrder()
     })
 
@@ -117,7 +117,7 @@ define(["jquery", "jqueryui", "core/ajax", "core/notification", "core/str", "cor
   },
 
   initSortablePlaylist: function () {
-    
+
 
     // Create playlist container if it doesn't exist
     if ($("#playlist-container").length === 0) {
@@ -191,7 +191,7 @@ define(["jquery", "jqueryui", "core/ajax", "core/notification", "core/str", "cor
   },
 
   updatePlaylistOrder: function () {
-    
+
     var playlist = $("#sortable-playlist")
     playlist.empty()
 
@@ -238,7 +238,7 @@ define(["jquery", "jqueryui", "core/ajax", "core/notification", "core/str", "cor
       newOrder.push($(this).data("video-id").toString())
     })
     this.videoOrder = newOrder
-    $("#id_video_order").val(JSON.stringify(this.videoOrder))
+    $("input['video_order']").val(JSON.stringify(this.videoOrder))
   },
 
   message: (event, self) => {
@@ -251,8 +251,8 @@ define(["jquery", "jqueryui", "core/ajax", "core/notification", "core/str", "cor
           self.videoOrder.push(streamid)
         }
       }
-      $("#id_identifier").val(self.selectedIds.join(","))
-      $("#id_video_order").val(JSON.stringify(self.videoOrder))
+      $("input[name=identifier]").val(self.selectedIds.join(","))
+      $("input['video_order']").val(JSON.stringify(self.videoOrder))
       $("#upload_stream").hide()
       self.load()
     }
