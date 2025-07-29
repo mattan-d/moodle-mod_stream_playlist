@@ -71,7 +71,7 @@ define(["jquery", "jqueryui", "core/ajax", "core/notification", "core/str", "cor
         }
       }
       $("input[name=identifier]").val(self.selectedIds.join(","))
-      $("input['video_order']").val(JSON.stringify(self.videoOrder))
+      $("input[name=video_order]").val(JSON.stringify(self.videoOrder))
       self.updatePlaylistOrder()
     })
 
@@ -238,7 +238,7 @@ define(["jquery", "jqueryui", "core/ajax", "core/notification", "core/str", "cor
       newOrder.push($(this).data("video-id").toString())
     })
     this.videoOrder = newOrder
-    $("input['video_order']").val(JSON.stringify(this.videoOrder))
+    $("input[name=video_order]").val(JSON.stringify(this.videoOrder))
   },
 
   message: (event, self) => {
@@ -252,7 +252,7 @@ define(["jquery", "jqueryui", "core/ajax", "core/notification", "core/str", "cor
         }
       }
       $("input[name=identifier]").val(self.selectedIds.join(","))
-      $("input['video_order']").val(JSON.stringify(self.videoOrder))
+      $("input[name=video_order]").val(JSON.stringify(self.videoOrder))
       $("#upload_stream").hide()
       self.load()
     }
