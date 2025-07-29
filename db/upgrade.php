@@ -90,5 +90,19 @@ function xmldb_stream_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2024121102, 'stream');
     }
 
+    if ($oldversion < 2024121103) {
+        // Define table stream to be altered.
+        $table = new xmldb_table('stream');
+        $field = new xmldb_field('video_order', XMLDB_TYPE_TEXT, null, null, null, null, null, 'identifier');
+
+        // Conditionally launch add field video_order.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Stream savepoint reached.
+        upgrade_mod_savepoint(true, 2024121103, 'stream');
+    }
+
     return true;
 }

@@ -59,6 +59,10 @@ class mod_stream_mod_form extends moodleform_mod {
         $mform->setType('identifier', PARAM_TEXT);
         $mform->addHelpButton('identifier', 'identifier', 'stream');
 
+        // Add the video_order hidden field to the form
+        $mform->addElement('hidden', 'video_order');
+        $mform->setType('video_order', PARAM_TEXT);
+
         $this->standard_intro_elements();
 
         $mform->addElement('html', $OUTPUT->render_from_template('mod_stream/search', [

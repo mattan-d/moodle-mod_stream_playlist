@@ -69,3 +69,7 @@ $string['topic_help'] = 'the video topic from stream server.';
 $string['upload'] = 'Upload';
 $string['views'] = 'Views';
 $string['viewed'] = 'Viewed';
+$string['playlistorder'] = 'Playlist Order';
+$string['playlistorder_help'] = 'Drag and drop videos to change their order in the playlist.';
+$string['selectedvideos'] = 'Selected Videos';
+$string['dragtoorder'] = 'Drag to reorder';

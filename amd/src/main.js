@@ -31,6 +31,20 @@ define(["jquery", "core/ajax", "core/notification", "core/str", "core/url"], ($,
     this.elements = $("#stream-elements")
     this.loadingbars = url.imageUrl("icones/loading-bars", "stream")
     this.selectedIds = ($("#id_identifier").val() || "").split(",").filter(Boolean)
+    this.videoOrder = []
+
+    // Initialize video order from existing data
+    try {
+      var orderData = $("#id_video_order").val()
+      if (orderData) {
+        this.videoOrder = JSON.parse(orderData)
+      }
+    } catch (e) {
+      this.videoOrder = []
+    }
+
+    // Initialize sortable playlist
+    this.initSortablePlaylist()
 
     $("body").on("click", "#stream-elements .list-item-grid", function () {
       var itemid = $(this).data("itemid").toString()
@@ -39,11 +53,22 @@ define(["jquery", "core/ajax", "core/notification", "core/str", "core/url"], ($,
       if (index > -1) {
         self.selectedIds.splice(index, 1)
         $(this).find(".item").removeClass("selected")
+        // Remove from video order
+        var orderIndex = self.videoOrder.indexOf(itemid)
+        if (orderIndex > -1) {
+          self.videoOrder.splice(orderIndex, 1)
+        }
       } else {
         self.selectedIds.push(itemid)
         $(this).find(".item").addClass("selected")
+        // Add to video order if not already there
+        if (self.videoOrder.indexOf(itemid) === -1) {
+          self.videoOrder.push(itemid)
+        }
       }
       $("#id_identifier").val(self.selectedIds.join(","))
+      $("#id_video_order").val(JSON.stringify(self.videoOrder))
+      self.updatePlaylistOrder()
     })
 
     $("body").on("click", "#stream-load #stream-sort .btn", function (e) {
@@ -86,18 +111,97 @@ define(["jquery", "core/ajax", "core/notification", "core/str", "core/url"], ($,
       false,
     )
   },
+
+  initSortablePlaylist: function () {
+    
+
+    // Create playlist container if it doesn't exist
+    if ($("#playlist-container").length === 0) {
+      $("#stream-load").after(
+        '<div id="playlist-container"><h4>Selected Videos (Drag to reorder):</h4><ul id="sortable-playlist" class="list-group"></ul></div>',
+      )
+    }
+
+    // Make the playlist sortable
+    $("#sortable-playlist").sortable({
+      update: (event, ui) => {
+        this.updateVideoOrderFromPlaylist()
+      },
+      placeholder: "ui-state-highlight list-group-item",
+      cursor: "move",
+    })
+
+    this.updatePlaylistOrder()
+  },
+
+  updatePlaylistOrder: function () {
+    
+    var playlist = $("#sortable-playlist")
+    playlist.empty()
+
+    // Add selected videos to playlist in order
+    this.videoOrder.forEach((videoId) => {
+      if (this.selectedIds.indexOf(videoId) > -1) {
+        var videoElement = $("#video_identifier_" + videoId)
+        if (videoElement.length > 0) {
+          var title = videoElement.find(".title").text()
+          var thumbnail = videoElement.find("img").attr("src")
+
+          var playlistItem = $(
+            '<li class="list-group-item playlist-item" data-video-id="' +
+              videoId +
+              '">' +
+              '<div class="d-flex align-items-center">' +
+              '<img src="' +
+              thumbnail +
+              '" class="playlist-thumbnail me-3" style="width: 60px; height: 34px; object-fit: cover;">' +
+              '<span class="playlist-title flex-grow-1">' +
+              title +
+              "</span>" +
+              '<span class="drag-handle ms-2" style="cursor: move;">⋮⋮</span>' +
+              "</div>" +
+              "</li>",
+          )
+
+          playlist.append(playlistItem)
+        }
+      }
+    })
+
+    // Show/hide playlist based on selection
+    if (this.selectedIds.length > 0) {
+      $("#playlist-container").show()
+    } else {
+      $("#playlist-container").hide()
+    }
+  },
+
+  updateVideoOrderFromPlaylist: function () {
+    var newOrder = []
+    $("#sortable-playlist .playlist-item").each(function () {
+      newOrder.push($(this).data("video-id").toString())
+    })
+    this.videoOrder = newOrder
+    $("#id_video_order").val(JSON.stringify(this.videoOrder))
+  },
+
   message: (event, self) => {
     // Check if the message contains the streamid
     if (event.data && event.data.streamid) {
       var streamid = event.data.streamid.toString()
       if (self.selectedIds.indexOf(streamid) === -1) {
         self.selectedIds.push(streamid)
+        if (self.videoOrder.indexOf(streamid) === -1) {
+          self.videoOrder.push(streamid)
+        }
       }
       $("#id_identifier").val(self.selectedIds.join(","))
+      $("#id_video_order").val(JSON.stringify(self.videoOrder))
       $("#upload_stream").hide()
       self.load()
     }
   },
+
   load: function () {
     var sort = $("#stream-load #stream-sort .btn.active").attr("data-name")
 
@@ -117,10 +221,12 @@ define(["jquery", "core/ajax", "core/notification", "core/str", "core/url"], ($,
       .then((response) => this.list(response, this))
       .catch((error) => this.failed(error, this))
   },
+
   failed: (error, self) =>
     str
       .get_string("servererror", "moodle")
       .then((connectionfailed) => self.elements.html('<div class="alert alert-danger">' + connectionfailed + "</div>")),
+
   list: (response, self) => {
     if (response.status == "success") {
       if (response.videos.length) {
@@ -166,6 +272,9 @@ define(["jquery", "core/ajax", "core/notification", "core/str", "core/url"], ($,
                   .find(".item")
                   .addClass("selected")
               }
+
+              // Update playlist after adding videos
+              self.updatePlaylistOrder()
 
               return null
             })

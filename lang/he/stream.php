@@ -52,9 +52,12 @@ $string['privacy:metadata'] = 'אם Stream משולב עם <a href="https://stre
 $string['privacy:metadata:stream'] = 'הגדרות Stream';
 $string['privacy:metadata:stream:email'] = 'האימייל של המשתמש שניגש לשרת Stream.';
 $string['privacy:metadata:stream:fullname'] = 'השם המלא של המשתמש שניגש לשרת Stream.';
+$string['playlistorder'] = 'סדר רשימת ההשמעה';
+$string['playlistorder_help'] = 'גררו ושחררו סרטונים כדי לשנות את הסדר שלהם ברשימת ההשמעה.';
 $string['safetyid'] = 'תעודת זהות תלמיד';
 $string['safetynone'] = 'הכל';
 $string['search'] = 'חיפוש';
+$string['selectedvideos'] = 'סרטונים נבחרים';
 $string['sortbyname'] = 'מיון לפי שם';
 $string['sortbytimecreated'] = 'מיון לפי תאריך';
 $string['sortbyview'] = 'מיון לפי צפיות';
@@ -67,3 +70,4 @@ $string['topic_help'] = 'נושא הסרטון משרת Stream.';
 $string['upload'] = 'העלאה';
 $string['views'] = 'צפיות';
 $string['viewed'] = 'נצפה';
+$string['dragtoorder'] = 'גררו לסידור מחדש';

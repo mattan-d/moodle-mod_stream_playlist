@@ -79,6 +79,37 @@ if (empty($identifiers)) {
     exit;
 }
 
+// Get video order if available
+$videoOrder = [];
+if (!empty($stream->video_order)) {
+    try {
+        $videoOrder = json_decode($stream->video_order, true);
+        if (!is_array($videoOrder)) {
+            $videoOrder = [];
+        }
+    } catch (Exception $e) {
+        $videoOrder = [];
+    }
+}
+
+// Order identifiers based on video_order if available
+if (!empty($videoOrder)) {
+    $orderedIdentifiers = [];
+    // First add videos in the specified order
+    foreach ($videoOrder as $videoId) {
+        if (in_array($videoId, $identifiers)) {
+            $orderedIdentifiers[] = $videoId;
+        }
+    }
+    // Then add any remaining videos that weren't in the order
+    foreach ($identifiers as $identifier) {
+        if (!in_array($identifier, $orderedIdentifiers)) {
+            $orderedIdentifiers[] = $identifier;
+        }
+    }
+    $identifiers = $orderedIdentifiers;
+}
+
 $videos = mod_stream\stream_video::get_videos_by_id($identifiers);
 
 // Get viewed videos for the current user.
