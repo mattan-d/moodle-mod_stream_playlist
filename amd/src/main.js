@@ -21,9 +21,6 @@
  * @copyright  2024 mattandor <mattan@centricapp.co.il>
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-var define = window.define // Declare the define variable
-
 define(["jquery", "jqueryui", "core/ajax", "core/notification", "core/str", "core/url"], (
   $,
   jqui,
