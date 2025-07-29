@@ -37,12 +37,12 @@ define(["jquery", "jqueryui", "core/ajax", "core/notification", "core/str", "cor
 
     this.elements = $("#stream-elements")
     this.loadingbars = url.imageUrl("icones/loading-bars", "stream")
-    this.selectedIds = ($("#id_identifier").val() || "").split(",").filter(Boolean)
+    this.selectedIds = ($("input[name=identifier]").val() || "").split(",").filter(Boolean)
     this.videoOrder = []
 
     // Initialize video order from existing data
     try {
-      var orderData = $("#id_video_order").val()
+      var orderData = $("input[name=video_order]").val()
       if (orderData) {
         this.videoOrder = JSON.parse(orderData)
       }
