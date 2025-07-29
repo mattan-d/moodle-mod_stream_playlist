@@ -24,7 +24,14 @@
 
 var define = window.define // Declare the define variable
 
-define(["jquery", "core/ajax", "core/notification", "core/str", "core/url"], ($, ajax, notification, str, url) => ({
+define(["jquery", "jqueryui", "core/ajax", "core/notification", "core/str", "core/url"], (
+  $,
+  jqui,
+  ajax,
+  notification,
+  str,
+  url,
+) => ({
   init: function () {
     var self = this
 
@@ -122,16 +129,68 @@ define(["jquery", "core/ajax", "core/notification", "core/str", "core/url"], ($,
       )
     }
 
-    // Make the playlist sortable
-    $("#sortable-playlist").sortable({
-      update: (event, ui) => {
-        this.updateVideoOrderFromPlaylist()
-      },
-      placeholder: "ui-state-highlight list-group-item",
-      cursor: "move",
-    })
+    // Initialize sortable with a delay to ensure DOM is ready
+    setTimeout(() => {
+      if ($("#sortable-playlist").length > 0) {
+        try {
+          $("#sortable-playlist").sortable({
+            update: (event, ui) => {
+              this.updateVideoOrderFromPlaylist()
+            },
+            placeholder: "ui-state-highlight list-group-item",
+            cursor: "move",
+            tolerance: "pointer",
+            opacity: 0.8,
+          })
+        } catch (e) {
+          console.warn("jQuery UI sortable not available, using fallback drag implementation")
+          this.initFallbackDragDrop()
+        }
+      }
+    }, 100)
 
     this.updatePlaylistOrder()
+  },
+
+  initFallbackDragDrop: function () {
+    var self = this
+    var draggedElement = null
+
+    // Add drag and drop event listeners as fallback
+    $(document).on("dragstart", ".playlist-item", function (e) {
+      draggedElement = this
+      $(this).addClass("dragging")
+      e.originalEvent.dataTransfer.effectAllowed = "move"
+      e.originalEvent.dataTransfer.setData("text/html", this.outerHTML)
+    })
+
+    $(document).on("dragend", ".playlist-item", function (e) {
+      $(this).removeClass("dragging")
+      draggedElement = null
+    })
+
+    $(document).on("dragover", ".playlist-item", function (e) {
+      e.preventDefault()
+      e.originalEvent.dataTransfer.dropEffect = "move"
+
+      if (draggedElement !== this) {
+        var rect = this.getBoundingClientRect()
+        var midpoint = rect.top + rect.height / 2
+
+        if (e.originalEvent.clientY < midpoint) {
+          $(this).before(draggedElement)
+        } else {
+          $(this).after(draggedElement)
+        }
+
+        self.updateVideoOrderFromPlaylist()
+      }
+    })
+
+    // Make items draggable
+    $(document).on("mouseenter", ".playlist-item", function () {
+      $(this).attr("draggable", "true")
+    })
   },
 
   updatePlaylistOrder: function () {
@@ -150,7 +209,7 @@ define(["jquery", "core/ajax", "core/notification", "core/str", "core/url"], ($,
           var playlistItem = $(
             '<li class="list-group-item playlist-item" data-video-id="' +
               videoId +
-              '">' +
+              '" draggable="true">' +
               '<div class="d-flex align-items-center">' +
               '<img src="' +
               thumbnail +

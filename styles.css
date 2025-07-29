@@ -344,10 +344,16 @@
   background: white;
   border: 1px solid #dee2e6;
   border-radius: 4px;
+  user-select: none;
 }
 
 .playlist-item:hover {
   background-color: #f8f9fa;
+}
+
+.playlist-item.dragging {
+  opacity: 0.5;
+  transform: rotate(2deg);
 }
 
 .playlist-thumbnail {
@@ -375,4 +381,13 @@
 .ui-sortable-helper {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   transform: rotate(2deg);
+}
+
+/* Fallback drag and drop styles */
+.playlist-item[draggable="true"] {
+  cursor: move;
+}
+
+.playlist-item.drag-over {
+  border-top: 3px solid #007bff;
 }
