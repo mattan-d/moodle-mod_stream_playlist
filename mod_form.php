@@ -42,7 +42,7 @@ class mod_stream_mod_form extends moodleform_mod {
      * @throws coding_exception
      */
     public function definition() {
-        global $PAGE, $OUTPUT, $USER;
+        global $PAGE, $OUTPUT, $USER, $DB;
 
         $mform = $this->_form;
         $PAGE->requires->jquery();
@@ -55,13 +55,38 @@ class mod_stream_mod_form extends moodleform_mod {
         $mform->addRule('name', null, 'required', null, 'client');
         $mform->addRule('name', get_string('maximumchars', '', 255), 'maxlength', 255, 'client');
 
-        $mform->addElement('text', 'identifier', get_string('identifier', 'stream'), ['size' => '255', 'readonly' => true]);
+        $mform->addElement('hidden', 'identifier');
         $mform->setType('identifier', PARAM_TEXT);
-        $mform->addHelpButton('identifier', 'identifier', 'stream');
+        $mform->addRule('identifier', null, 'required', null, 'client');
 
         // Add the video_order hidden field to the form
         $mform->addElement('hidden', 'video_order');
         $mform->setType('video_order', PARAM_TEXT);
+
+        // Set default values for existing instances
+        if (!empty($this->current->instance)) {
+            $stream = $DB->get_record('stream', ['id' => $this->current->instance]);
+            if ($stream) {
+                // Set default for identifier
+                $mform->setDefault('identifier', $stream->identifier);
+                
+                // Set default for video_order
+                if (!empty($stream->video_order)) {
+                    $mform->setDefault('video_order', $stream->video_order);
+                } else {
+                    // If no video_order exists, create one from the identifier order
+                    $identifiers = array_filter(explode(',', $stream->identifier));
+                    if (!empty($identifiers)) {
+                        $mform->setDefault('video_order', json_encode(array_values($identifiers)));
+                    } else {
+                        $mform->setDefault('video_order', '[]');
+                    }
+                }
+            }
+        } else {
+            // For new instances, set empty defaults
+            $mform->setDefault('video_order', '[]');
+        }
 
         $this->standard_intro_elements();
 
@@ -72,5 +97,48 @@ class mod_stream_mod_form extends moodleform_mod {
         $this->standard_grading_coursemodule_elements();
         $this->standard_coursemodule_elements();
         $this->add_action_buttons();
+    }
+
+    /**
+     * Perform minimal validation on the settings form
+     * @param array $data
+     * @param array $files
+     */
+    public function validation($data, $files) {
+        $errors = parent::validation($data, $files);
+
+        // Validate that identifier is not empty
+        if (empty(trim($data['identifier']))) {
+            $errors['identifier'] = get_string('required');
+        }
+
+        // Validate video_order is valid JSON if provided
+        if (!empty($data['video_order'])) {
+            $decoded = json_decode($data['video_order'], true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                // Reset to empty array if invalid JSON
+                $data['video_order'] = '[]';
+            }
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Add elements to form
+     */
+    public function data_preprocessing(&$default_values) {
+        parent::data_preprocessing($default_values);
+
+        // Ensure video_order is properly set during data preprocessing
+        if (isset($default_values['video_order']) && !empty($default_values['video_order'])) {
+            // Make sure it's valid JSON
+            $decoded = json_decode($default_values['video_order'], true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $default_values['video_order'] = '[]';
+            }
+        } else {
+            $default_values['video_order'] = '[]';
+        }
     }
 }

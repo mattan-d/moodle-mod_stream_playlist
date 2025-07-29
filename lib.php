@@ -57,6 +57,12 @@ function stream_add_instance(stdClass $stream, $mform = null) {
   global $DB;
 
   $stream->timecreated = time();
+  
+  // Ensure video_order is properly handled
+  if (empty($stream->video_order)) {
+      $stream->video_order = '[]';
+  }
+  
   $stream->id = $DB->insert_record('stream', $stream);
 
   stream_grade_item_update($stream);
@@ -76,6 +82,11 @@ function stream_update_instance(stdClass $stream, $mform = null) {
 
   $stream->timemodified = time();
   $stream->id = $stream->instance;
+
+  // Ensure video_order is properly handled
+  if (empty($stream->video_order)) {
+      $stream->video_order = '[]';
+  }
 
   $result = $DB->update_record('stream', $stream);
 
