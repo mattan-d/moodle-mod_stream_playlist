@@ -27,10 +27,12 @@
             { "id": "vid1", "title": "Video 1", "thumbnail": "url/to/thumb1.jpg", "duration": "10:00", "active": true, "viewed": true },
             { "id": "vid2", "title": "Video 2", "thumbnail": "url/to/thumb2.jpg", "duration": "05:30", "viewed": false }
         ],
-        "initial_player": "<iframe...>"
+        "initial_player": "<iframe...>",
+        "show_playlist": true
     }
 }}
-<div class="stream-playlist-container" data-cmid="{{cmid}}" data-includeaudio="{{includeaudio}}">
+<div class="stream-playlist-container {{#show_playlist}}with-playlist{{/show_playlist}}{{^show_playlist}}single-video{{/show_playlist}}" data-cmid="{{cmid}}" data-includeaudio="{{includeaudio}}">
+    {{#show_playlist}}
     <div class="stream-playlist-sidebar">
         <ul class="list-group">
             {{#videos}}
@@ -49,6 +51,7 @@
             {{/videos}}
         </ul>
     </div>
+    {{/show_playlist}}
     <div class="stream-main-video">
         {{{initial_player}}}
     </div>

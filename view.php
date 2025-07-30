@@ -131,11 +131,15 @@ if (!empty($videos)) {
 $first_video_identifier = $identifiers[0];
 $initial_player = mod_stream\stream_video::player($cm->id, $first_video_identifier, $includeaudio);
 
+// Determine if we should show the playlist sidebar (only show if more than 1 video)
+$show_playlist = count($videos) > 1;
+
 $template_data = [
     'cmid' => $cm->id,
     'includeaudio' => $includeaudio,
     'videos' => $videos,
     'initial_player' => $initial_player,
+    'show_playlist' => $show_playlist,
 ];
 
 echo $OUTPUT->render_from_template('mod_stream/playlist', $template_data);
