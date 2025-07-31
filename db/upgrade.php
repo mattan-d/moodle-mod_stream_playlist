@@ -104,5 +104,25 @@ function xmldb_stream_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2024121103, 'stream');
     }
 
+    if ($oldversion < 2024121104) {
+        // Define table stream to be altered.
+        $table = new xmldb_table('stream');
+        $field = new xmldb_field('collection_mode', XMLDB_TYPE_INTEGER, '1', true, XMLDB_NOTNULL, null, '0', 'video_order');
+
+        // Conditionally launch add field collection_mode.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Add index for collection_mode.
+        $index = new xmldb_index('collection_mode', XMLDB_INDEX_NOTUNIQUE, ['collection_mode']);
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Stream savepoint reached.
+        upgrade_mod_savepoint(true, 2024121104, 'stream');
+    }
+
     return true;
 }

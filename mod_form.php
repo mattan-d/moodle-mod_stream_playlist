@@ -55,6 +55,12 @@ class mod_stream_mod_form extends moodleform_mod {
         $mform->addRule('name', null, 'required', null, 'client');
         $mform->addRule('name', get_string('maximumchars', '', 255), 'maxlength', 255, 'client');
 
+        // Video Recordings Collection Mode
+        $mform->addElement('advcheckbox', 'collection_mode', get_string('collectionmode', 'stream'), 
+                          get_string('collectionmode_desc', 'stream'));
+        $mform->addHelpButton('collection_mode', 'collectionmode', 'stream');
+        $mform->setDefault('collection_mode', 0);
+
         $mform->addElement('hidden', 'identifier');
         $mform->setType('identifier', PARAM_TEXT);
         $mform->addRule('identifier', null, 'required', null, 'client');
@@ -69,6 +75,9 @@ class mod_stream_mod_form extends moodleform_mod {
             if ($stream) {
                 // Set default for identifier
                 $mform->setDefault('identifier', $stream->identifier);
+                
+                // Set default for collection_mode
+                $mform->setDefault('collection_mode', $stream->collection_mode ?? 0);
                 
                 // Set default for video_order
                 if (!empty($stream->video_order)) {
@@ -90,9 +99,43 @@ class mod_stream_mod_form extends moodleform_mod {
 
         $this->standard_intro_elements();
 
+        // Only show video search if collection mode is disabled
+        $mform->addElement('html', '<div id="video-search-container">');
         $mform->addElement('html', $OUTPUT->render_from_template('mod_stream/search', [
                 'endpoint' => get_config('stream', 'apiendpoint'),
         ]));
+        $mform->addElement('html', '</div>');
+
+        // Add JavaScript to hide/show video search based on collection mode
+        $PAGE->requires->js_init_code('
+            function toggleVideoSearch() {
+                var collectionMode = document.getElementById("id_collection_mode");
+                var videoSearchContainer = document.getElementById("video-search-container");
+                var identifierField = document.querySelector("input[name=\'identifier\']");
+                
+                if (collectionMode && videoSearchContainer) {
+                    if (collectionMode.checked) {
+                        videoSearchContainer.style.display = "none";
+                        if (identifierField) {
+                            identifierField.value = "auto_collection";
+                        }
+                    } else {
+                        videoSearchContainer.style.display = "block";
+                        if (identifierField && identifierField.value === "auto_collection") {
+                            identifierField.value = "";
+                        }
+                    }
+                }
+            }
+            
+            document.addEventListener("DOMContentLoaded", function() {
+                var collectionMode = document.getElementById("id_collection_mode");
+                if (collectionMode) {
+                    collectionMode.addEventListener("change", toggleVideoSearch);
+                    toggleVideoSearch(); // Initial call
+                }
+            });
+        ');
 
         $this->standard_grading_coursemodule_elements();
         $this->standard_coursemodule_elements();
@@ -107,9 +150,12 @@ class mod_stream_mod_form extends moodleform_mod {
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
 
-        // Validate that identifier is not empty
-        if (empty(trim($data['identifier']))) {
-            $errors['identifier'] = get_string('required');
+        // If collection mode is enabled, we don't need to validate identifier
+        if (empty($data['collection_mode'])) {
+            // Validate that identifier is not empty when not in collection mode
+            if (empty(trim($data['identifier']))) {
+                $errors['identifier'] = get_string('required');
+            }
         }
 
         // Validate video_order is valid JSON if provided

@@ -63,60 +63,51 @@ if (trim(strip_tags($stream->intro))) {
     echo $OUTPUT->box(format_module_intro('stream', $stream, $cm->id), 'generalbox', 'intro');
 }
 
-$builtinaudioplayerpattern = get_config('stream', 'builtinaudioplayer');
-$includeaudio = false;
-if (isset($builtinaudioplayerpattern) && !empty($builtinaudioplayerpattern) && isset($PAGE->course->shortname)) {
-    if (preg_match($builtinaudioplayerpattern, $PAGE->course->shortname)) {
-        $includeaudio = true;
+// Check if this is collection mode
+if ($stream->collection_mode) {
+    // Handle collection mode - get videos from local_stream plugin
+    $videos = [];
+    
+    // Check if local_stream plugin exists and has the required function
+    if (function_exists('local_stream_get_course_videos')) {
+        $videos = local_stream_get_course_videos($course->id, $cm->id);
+    } else {
+        // Fallback: show message that local_stream plugin is required
+        echo $OUTPUT->notification(
+            get_string('collectionmode_plugin_required', 'stream', 'local_stream'), 
+            'notifywarning'
+        );
     }
-}
-
-$identifiers = array_values(array_filter(explode(',', $stream->identifier)));
-
-if (empty($identifiers)) {
-    echo $OUTPUT->notification(get_string('noresults', 'mod_stream'));
-    echo $OUTPUT->footer();
-    exit;
-}
-
-// Get video order if available
-$videoOrder = [];
-if (!empty($stream->video_order)) {
-    try {
-        $videoOrder = json_decode($stream->video_order, true);
-        if (!is_array($videoOrder)) {
-            $videoOrder = [];
-        }
-    } catch (Exception $e) {
-        $videoOrder = [];
+    
+    if (empty($videos)) {
+        echo $OUTPUT->notification(get_string('noresults', 'stream'), 'notifyinfo');
+        echo $OUTPUT->footer();
+        exit;
     }
-}
-
-// Order identifiers based on video_order if available
-if (!empty($videoOrder)) {
-    $orderedIdentifiers = [];
-    // First add videos in the specified order
-    foreach ($videoOrder as $videoId) {
-        if (in_array($videoId, $identifiers)) {
-            $orderedIdentifiers[] = $videoId;
-        }
+} else {
+    // Regular mode - get videos from identifier field
+    if (empty($stream->identifier) || trim($stream->identifier) === '') {
+        echo $OUTPUT->notification(get_string('noresults', 'stream'), 'notifyinfo');
+        echo $OUTPUT->footer();
+        exit;
     }
-    // Then add any remaining videos that weren't in the order
-    foreach ($identifiers as $identifier) {
-        if (!in_array($identifier, $orderedIdentifiers)) {
-            $orderedIdentifiers[] = $identifier;
-        }
+
+    $identifiers = array_values(array_filter(explode(',', $stream->identifier)));
+
+    if (empty($identifiers)) {
+        echo $OUTPUT->notification(get_string('noresults', 'stream'), 'notifyinfo');
+        echo $OUTPUT->footer();
+        exit;
     }
-    $identifiers = $orderedIdentifiers;
-}
 
-$videos = mod_stream\stream_video::get_videos_by_id($identifiers);
+    $videos = mod_stream\stream_video::get_videos_by_id($identifiers);
 
-// Check if we have any videos before proceeding
-if (empty($videos)) {
-    echo $OUTPUT->notification(get_string('noresults', 'mod_stream'));
-    echo $OUTPUT->footer();
-    exit;
+    // Check if we have any videos before proceeding
+    if (empty($videos)) {
+        echo $OUTPUT->notification(get_string('noresults', 'stream'), 'notifyinfo');
+        echo $OUTPUT->footer();
+        exit;
+    }
 }
 
 // Get viewed videos for the current user.
@@ -134,24 +125,58 @@ foreach ($videos as $video) {
     $video->viewed = in_array($video->id, $viewedvideoids);
 }
 
-if (!empty($videos)) {
-    $videos[0]->active = true;
+// Apply custom order if available and not in collection mode
+if (!$stream->collection_mode && !empty($stream->video_order)) {
+    $videoOrder = json_decode($stream->video_order, true);
+    if (is_array($videoOrder) && !empty($videoOrder)) {
+        $orderedVideos = [];
+        $videoMap = [];
+        
+        // Create a map of video ID to video object
+        foreach ($videos as $video) {
+            $videoMap[$video->id] = $video;
+        }
+        
+        // Add videos in the specified order
+        foreach ($videoOrder as $videoId) {
+            if (isset($videoMap[$videoId])) {
+                $orderedVideos[] = $videoMap[$videoId];
+                unset($videoMap[$videoId]);
+            }
+        }
+        
+        // Add any remaining videos that weren't in the order
+        foreach ($videoMap as $video) {
+            $orderedVideos[] = $video;
+        }
+        
+        $videos = $orderedVideos;
+    }
 }
-
-$first_video_identifier = $identifiers[0];
-$initial_player = mod_stream\stream_video::player($cm->id, $first_video_identifier, $includeaudio);
 
 // Determine if we should show the playlist sidebar (only show if more than 1 video)
 $show_playlist = count($videos) > 1;
 
 $template_data = [
     'cmid' => $cm->id,
-    'includeaudio' => $includeaudio,
+    'includeaudio' => false,
     'videos' => $videos,
-    'initial_player' => $initial_player,
+    'initial_player' => null,
     'show_playlist' => $show_playlist,
+    'single_video' => !$show_playlist,
+    'stream_id' => $stream->id,
+    'course_id' => $course->id,
+    'collection_mode' => $stream->collection_mode
 ];
 
+// Add current video (first video by default)
+if (!empty($videos)) {
+    $template_data['current_video'] = $videos[0];
+}
+
 echo $OUTPUT->render_from_template('mod_stream/playlist', $template_data);
+
+// Update grades for the current user
+stream_update_grades($stream, $USER->id);
 
 echo $OUTPUT->footer();

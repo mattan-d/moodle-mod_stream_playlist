@@ -63,6 +63,16 @@ function stream_add_instance(stdClass $stream, $mform = null) {
       $stream->video_order = '[]';
   }
   
+  // Ensure collection_mode is properly handled
+  if (!isset($stream->collection_mode)) {
+      $stream->collection_mode = 0;
+  }
+  
+  // If collection mode is enabled, set identifier to auto_collection
+  if ($stream->collection_mode) {
+      $stream->identifier = 'auto_collection';
+  }
+  
   $stream->id = $DB->insert_record('stream', $stream);
 
   stream_grade_item_update($stream);
@@ -86,6 +96,16 @@ function stream_update_instance(stdClass $stream, $mform = null) {
   // Ensure video_order is properly handled
   if (empty($stream->video_order)) {
       $stream->video_order = '[]';
+  }
+  
+  // Ensure collection_mode is properly handled
+  if (!isset($stream->collection_mode)) {
+      $stream->collection_mode = 0;
+  }
+  
+  // If collection mode is enabled, set identifier to auto_collection
+  if ($stream->collection_mode) {
+      $stream->identifier = 'auto_collection';
   }
 
   $result = $DB->update_record('stream', $stream);
