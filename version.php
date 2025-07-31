@@ -15,17 +15,18 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin version and other meta-data are defined here.
+ * mod_stream version.
  *
- * @package     mod_stream
- * @copyright   2024 mattandor <mattan@centricapp.co.il>
- * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    mod_stream
+ * @category   admin
+ * @copyright  2025 mattandor <mattan@centricapp.co.il>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'mod_stream';
-$plugin->release = '0.1.0';
 $plugin->version = 2024121104;
-$plugin->requires = 2022112800;
-$plugin->maturity = MATURITY_ALPHA;
+$plugin->requires = 2017111300;
+$plugin->release = 'v1.8';
+$plugin->component = 'mod_stream';
+$plugin->maturity = MATURITY_STABLE;

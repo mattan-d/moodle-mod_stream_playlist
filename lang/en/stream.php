@@ -15,42 +15,64 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin strings are defined here.
+ * Strings for component 'mod_stream', language 'en'.
  *
- * @package     mod_stream
- * @copyright   2024 mattandor <mattan@centricapp.co.il>
- * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    mod_stream
+ * @copyright  2024 mattandor <mattan@centricapp.co.il>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['modulename'] = 'Stream';
-$string['modulenameplural'] = 'Streams';
-$string['modulename_help'] = 'Use the stream module for... | The stream module allows...';
-$string['pluginname'] = 'Stream';
-$string['pluginadministration'] = 'Stream administration';
-
-// Form strings.
-$string['nametitle'] = 'Stream title';
-$string['collectionmode'] = 'Video Recordings Collection Mode';
-$string['collectionmode_desc'] = 'Enable this option to have new recordings automatically gathered and added as a playlist to this activity (By external plugin local_stream).';
-$string['collectionmode_help'] = 'When enabled, this activity will automatically collect video recordings from the course and create a playlist. The videos can still be manually edited and reordered. This feature requires the local_stream plugin to be installed.';
-
-// General strings.
-$string['views'] = 'views';
+$string['accountid'] = 'Stream account ID';
+$string['accountid_desc'] = '';
+$string['apiendpoint'] = 'Stream API Endpoint';
+$string['apiendpoint_desc'] = 'Choose which Stream API endpoint the Stream activity will use to connect.';
+$string['apiidentifier'] = 'Stream API Identifier';
+$string['apiidentifier_desc'] = 'The identifier field to use when making a call to the Stream API';
 $string['before'] = 'before';
-$string['noresults'] = 'No videos found';
+$string['builtinaudioplayer'] = 'Course Types with Built-in Audio Player';
+$string['builtinaudioplayer_desc'] = 'Template for identifying short course names using Regular Expressions.';
+$string['collectionmode'] = 'Video Recordings Collection Mode';
+$string['collectionmode_desc'] = 'Enable this option to automatically gather new recordings. You can still manually select specific videos to customize your playlist.';
+$string['collectionmode_help'] = 'When enabled, this activity can automatically collect new video recordings. You can also manually select specific videos to create a custom playlist. If no manual selection is made, all course recordings will be included automatically. This feature works best with the local_stream plugin installed and configured.';
+$string['connectionfailed'] = 'Connection failed: ';
+$string['connectionok'] = 'Connection working.';
+$string['connectionsettings'] = 'Connection settings';
+$string['connectionsettings_desc'] = 'These settings define how Moodle connects to Stream.';
+$string['connectionstatus'] = 'Connection status';
+$string['identifier'] = 'Video identifiers';
+$string['identifier_help'] = 'The video identifiers from the stream server.';
+$string['loadind'] = 'Loading video list...';
+$string['modulename'] = 'STREAM';
+$string['modulename_help'] =
+        'Stream is a cutting-edge video platform designed for schools, seamlessly integrating with current systems for optimal teaching. This Moodle plugin brings Stream\'s advanced features into your LMS, enriching the learning journey for both teachers and students.';
+$string['modulenameplural'] = 'STREAM';
+$string['nametitle'] = 'Title';
+$string['noresults'] = 'No results or videos were found.';
+$string['pluginadministration'] = 'Stream administration';
+$string['pluginname'] = 'STREAM';
+$string['privacy:metadata'] =
+        'The STREAM if integrated with <a href="https://stream-platform.cloud">CentricApp</a> will save data for detection of piracy.';
+$string['privacy:metadata:stream'] = 'Stream configuration';
+$string['privacy:metadata:stream:email'] = 'The Email of the user accessing the Stream server.';
+$string['privacy:metadata:stream:fullname'] = 'The full name of the user accessing the Stream server.';
+$string['safetyid'] = 'Student ID';
+$string['safetynone'] = 'Anything';
+$string['search'] = 'Search';
+$string['sortbyname'] = 'Sort by name';
+$string['sortbytimecreated'] = 'Sort by date';
+$string['sortbyview'] = 'Sort by views';
+$string['sortbysize'] = 'Sort by size';
+$string['stream'] = 'STREAM';
+$string['stream:addinstance'] = 'Add a new STREAM';
+$string['stream:view'] = 'View STREAM';
+$string['topic'] = 'Video Topic';
+$string['topic_help'] = 'the video topic from stream server.';
+$string['upload'] = 'Upload';
+$string['views'] = 'Views';
+$string['viewed'] = 'Viewed';
+$string['playlistorder'] = 'Playlist Order';
+$string['playlistorder_help'] = 'Drag and drop videos to change their order in the playlist.';
 $string['selectedvideos'] = 'Selected Videos';
 $string['dragtoorder'] = 'Drag to reorder';
-$string['servererror'] = 'Server connection failed';
-
-// Collection mode strings.
-$string['collectionmode_plugin_required'] = 'The {$a} plugin is required for Video Recordings Collection Mode to work properly.';
-$string['collectionmode_auto_collected'] = 'Videos automatically collected from course recordings';
-$string['collectionmode_manual_edit'] = 'You can still manually add, remove, or reorder videos below';
-
-// Privacy strings.
-$string['privacy:metadata:stream_viewed_videos'] = 'Information about which videos a user has viewed in stream activities.';
-$string['privacy:metadata:stream_viewed_videos:userid'] = 'The ID of the user who viewed the video.';
-$string['privacy:metadata:stream_viewed_videos:videoid'] = 'The ID of the video that was viewed.';
-$string['privacy:metadata:stream_viewed_videos:timecreated'] = 'The time when the video was viewed.';

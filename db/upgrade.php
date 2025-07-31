@@ -15,28 +15,83 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Stream upgrade script.
+ * This file keeps track of upgrades to the Stream plugin
  *
  * @package    mod_stream
- * @copyright  2024 mattandor <mattan@centricapp.co.il>
+ * @copyright  2016 Your Name <your@email.address>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
- * Execute stream upgrade from the given old version.
+ * Execute stream upgrade from the given old version
  *
  * @param int $oldversion
  * @return bool
+ * @throws ddl_exception
  */
 function xmldb_stream_upgrade($oldversion) {
     global $DB;
-
     $dbman = $DB->get_manager();
 
+    if ($oldversion < 2024121101) {
+        // Define table stream to be altered.
+        $table = new xmldb_table('stream');
+
+        // Change field identifier to text.
+        $field = new xmldb_field('identifier', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null, 'name');
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->change_field_type($table, $field);
+        }
+
+        // Drop field topic.
+        $field = new xmldb_field('topic');
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+
+        // Stream savepoint reached.
+        upgrade_mod_savepoint(true, 2024121101, 'stream');
+    }
+
+    if ($oldversion < 2024121102) {
+        // Define table stream to be altered.
+        $table = new xmldb_table('stream');
+        $field = new xmldb_field('grade', XMLDB_TYPE_INTEGER, '10', true, null, false, '100', 'introformat');
+
+        // Conditionally launch add field grade.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define table stream_viewed_videos to be created.
+        $table = new xmldb_table('stream_viewed_videos');
+
+        // Adding fields to table stream_viewed_videos.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('streamid', XMLDB_TYPE_INTEGER, '10', true, XMLDB_NOTNULL, null, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', true, XMLDB_NOTNULL, null, null);
+        $table->add_field('videoid', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timeviewed', XMLDB_TYPE_INTEGER, '10', true, XMLDB_NOTNULL, null, null);
+
+        // Adding keys to table stream_viewed_videos.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('streamid', XMLDB_KEY_FOREIGN, ['streamid'], 'stream', 'id');
+        $table->add_key('userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', 'id');
+
+        // Adding indexes to table stream_viewed_videos.
+        $table->add_index('stream_user_video', XMLDB_INDEX_UNIQUE, ['streamid', 'userid', 'videoid']);
+
+        // Conditionally launch create table for stream_viewed_videos.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Stream savepoint reached.
+        upgrade_mod_savepoint(true, 2024121102, 'stream');
+    }
+
     if ($oldversion < 2024121103) {
-        // Define field video_order to be added to stream.
+        // Define table stream to be altered.
         $table = new xmldb_table('stream');
         $field = new xmldb_field('video_order', XMLDB_TYPE_TEXT, null, null, null, null, null, 'identifier');
 
@@ -50,19 +105,17 @@ function xmldb_stream_upgrade($oldversion) {
     }
 
     if ($oldversion < 2024121104) {
-        // Define field collection_mode to be added to stream.
+        // Define table stream to be altered.
         $table = new xmldb_table('stream');
-        $field = new xmldb_field('collection_mode', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'video_order');
+        $field = new xmldb_field('collection_mode', XMLDB_TYPE_INTEGER, '1', true, XMLDB_NOTNULL, null, '0', 'video_order');
 
         // Conditionally launch add field collection_mode.
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
-        // Define index course_collection (not unique) to be added to stream.
-        $index = new xmldb_index('course_collection', XMLDB_INDEX_NOTUNIQUE, ['course', 'collection_mode']);
-
-        // Conditionally launch add index course_collection.
+        // Add index for collection_mode.
+        $index = new xmldb_index('collection_mode', XMLDB_INDEX_NOTUNIQUE, ['collection_mode']);
         if (!$dbman->index_exists($table, $index)) {
             $dbman->add_index($table, $index);
         }

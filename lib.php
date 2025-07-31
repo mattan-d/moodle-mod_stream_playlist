@@ -54,30 +54,30 @@ function stream_supports($feature) {
 * @return int The id of the newly inserted stream record
 */
 function stream_add_instance(stdClass $stream, $mform = null) {
-  global $DB;
+    global $DB;
 
-  $stream->timecreated = time();
-  
-  // Ensure video_order is properly handled
-  if (empty($stream->video_order)) {
-      $stream->video_order = '[]';
-  }
-  
-  // Ensure collection_mode is properly handled
-  if (!isset($stream->collection_mode)) {
-      $stream->collection_mode = 0;
-  }
-  
-  // If collection mode is enabled, set identifier to auto_collection
-  if ($stream->collection_mode) {
-      $stream->identifier = 'auto_collection';
-  }
-  
-  $stream->id = $DB->insert_record('stream', $stream);
+    $stream->timecreated = time();
+    
+    // Ensure video_order is properly handled
+    if (empty($stream->video_order)) {
+        $stream->video_order = '[]';
+    }
+    
+    // Ensure collection_mode is properly handled
+    if (!isset($stream->collection_mode)) {
+        $stream->collection_mode = 0;
+    }
+    
+    // If collection mode is enabled but no manual selection, set to auto_collection
+    if ($stream->collection_mode && (empty($stream->identifier) || trim($stream->identifier) === '')) {
+        $stream->identifier = 'auto_collection';
+    }
+    
+    $stream->id = $DB->insert_record('stream', $stream);
 
-  stream_grade_item_update($stream);
+    stream_grade_item_update($stream);
 
-  return $stream->id;
+    return $stream->id;
 }
 
 /**
@@ -88,31 +88,31 @@ function stream_add_instance(stdClass $stream, $mform = null) {
 * @return boolean Success/Fail
 */
 function stream_update_instance(stdClass $stream, $mform = null) {
-  global $DB;
+    global $DB;
 
-  $stream->timemodified = time();
-  $stream->id = $stream->instance;
+    $stream->timemodified = time();
+    $stream->id = $stream->instance;
 
-  // Ensure video_order is properly handled
-  if (empty($stream->video_order)) {
-      $stream->video_order = '[]';
-  }
-  
-  // Ensure collection_mode is properly handled
-  if (!isset($stream->collection_mode)) {
-      $stream->collection_mode = 0;
-  }
-  
-  // If collection mode is enabled, set identifier to auto_collection
-  if ($stream->collection_mode) {
-      $stream->identifier = 'auto_collection';
-  }
+    // Ensure video_order is properly handled
+    if (empty($stream->video_order)) {
+        $stream->video_order = '[]';
+    }
+    
+    // Ensure collection_mode is properly handled
+    if (!isset($stream->collection_mode)) {
+        $stream->collection_mode = 0;
+    }
+    
+    // If collection mode is enabled but no manual selection, set to auto_collection
+    if ($stream->collection_mode && (empty($stream->identifier) || trim($stream->identifier) === '')) {
+        $stream->identifier = 'auto_collection';
+    }
 
-  $result = $DB->update_record('stream', $stream);
+    $result = $DB->update_record('stream', $stream);
 
-  stream_grade_item_update($stream);
+    stream_grade_item_update($stream);
 
-  return $result;
+    return $result;
 }
 
 /**
