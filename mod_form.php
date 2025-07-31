@@ -99,40 +99,52 @@ class mod_stream_mod_form extends moodleform_mod {
 
         $this->standard_intro_elements();
 
-        // Only show video search if collection mode is disabled
+        // Video search section - always show but with conditional messaging
         $mform->addElement('html', '<div id="video-search-container">');
+        
+        // Add collection mode info
+        $mform->addElement('html', '<div id="collection-mode-info" style="display:none;" class="alert alert-info">
+            <strong>' . get_string('collectionmode_auto_collected', 'stream') . '</strong><br>
+            ' . get_string('collectionmode_manual_edit', 'stream') . '
+        </div>');
+        
         $mform->addElement('html', $OUTPUT->render_from_template('mod_stream/search', [
                 'endpoint' => get_config('stream', 'apiendpoint'),
         ]));
         $mform->addElement('html', '</div>');
 
-        // Add JavaScript to hide/show video search based on collection mode
+        // Add JavaScript to show/hide collection mode info and handle auto-collection
         $PAGE->requires->js_init_code('
-            function toggleVideoSearch() {
+            function toggleCollectionModeDisplay() {
                 var collectionMode = document.getElementById("id_collection_mode");
-                var videoSearchContainer = document.getElementById("video-search-container");
-                var identifierField = document.querySelector("input[name=\'identifier\']");
+                var collectionModeInfo = document.getElementById("collection-mode-info");
                 
-                if (collectionMode && videoSearchContainer) {
+                if (collectionMode && collectionModeInfo) {
                     if (collectionMode.checked) {
-                        videoSearchContainer.style.display = "none";
-                        if (identifierField) {
-                            identifierField.value = "auto_collection";
-                        }
+                        collectionModeInfo.style.display = "block";
+                        // Auto-populate with collection mode videos if available
+                        autoPopulateCollectionVideos();
                     } else {
-                        videoSearchContainer.style.display = "block";
-                        if (identifierField && identifierField.value === "auto_collection") {
-                            identifierField.value = "";
-                        }
+                        collectionModeInfo.style.display = "none";
                     }
+                }
+            }
+            
+            function autoPopulateCollectionVideos() {
+                // This function can be extended to automatically populate videos
+                // when collection mode is enabled, calling the local_stream plugin
+                var identifierField = document.querySelector("input[name=\'identifier\']");
+                if (identifierField && identifierField.value === "") {
+                    // Mark as collection mode for backend processing
+                    identifierField.value = "auto_collection_pending";
                 }
             }
             
             document.addEventListener("DOMContentLoaded", function() {
                 var collectionMode = document.getElementById("id_collection_mode");
                 if (collectionMode) {
-                    collectionMode.addEventListener("change", toggleVideoSearch);
-                    toggleVideoSearch(); // Initial call
+                    collectionMode.addEventListener("change", toggleCollectionModeDisplay);
+                    toggleCollectionModeDisplay(); // Initial call
                 }
             });
         ');
@@ -150,13 +162,8 @@ class mod_stream_mod_form extends moodleform_mod {
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
 
-        // If collection mode is enabled, we don't need to validate identifier
-        if (empty($data['collection_mode'])) {
-            // Validate that identifier is not empty when not in collection mode
-            if (empty(trim($data['identifier']))) {
-                $errors['identifier'] = get_string('required');
-            }
-        }
+        // Always allow empty identifier - it will be handled by collection mode or manual selection
+        // No validation needed for identifier field
 
         // Validate video_order is valid JSON if provided
         if (!empty($data['video_order'])) {

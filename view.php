@@ -63,51 +63,90 @@ if (trim(strip_tags($stream->intro))) {
     echo $OUTPUT->box(format_module_intro('stream', $stream, $cm->id), 'generalbox', 'intro');
 }
 
+$builtinaudioplayerpattern = get_config('stream', 'builtinaudioplayer');
+$includeaudio = false;
+if (isset($builtinaudioplayerpattern) && !empty($builtinaudioplayerpattern) && isset($PAGE->course->shortname)) {
+    if (preg_match($builtinaudioplayerpattern, $PAGE->course->shortname)) {
+        $includeaudio = true;
+    }
+}
+
+// Initialize videos array
+$videos = [];
+$auto_collected = false;
+
 // Check if this is collection mode
 if ($stream->collection_mode) {
     // Handle collection mode - get videos from local_stream plugin
-    $videos = [];
-    
-    // Check if local_stream plugin exists and has the required function
     if (function_exists('local_stream_get_course_videos')) {
-        $videos = local_stream_get_course_videos($course->id, $cm->id);
+        $auto_videos = local_stream_get_course_videos($course->id, $cm->id);
+        $auto_collected = true;
+        
+        // If we have manually selected videos (identifier field), merge them
+        if (!empty($stream->identifier) && $stream->identifier !== 'auto_collection' && $stream->identifier !== 'auto_collection_pending') {
+            $manual_identifiers = array_values(array_filter(explode(',', $stream->identifier)));
+            if (!empty($manual_identifiers)) {
+                $manual_videos = mod_stream\stream_video::get_videos_by_id($manual_identifiers);
+                
+                // Merge auto-collected and manually selected videos, avoiding duplicates
+                $video_ids = [];
+                $videos = [];
+                
+                // Add manual videos first (they take priority)
+                foreach ($manual_videos as $video) {
+                    if (!in_array($video->id, $video_ids)) {
+                        $videos[] = $video;
+                        $video_ids[] = $video->id;
+                    }
+                }
+                
+                // Add auto-collected videos that aren't already included
+                foreach ($auto_videos as $video) {
+                    if (!in_array($video->id, $video_ids)) {
+                        $videos[] = $video;
+                        $video_ids[] = $video->id;
+                    }
+                }
+            } else {
+                $videos = $auto_videos;
+            }
+        } else {
+            $videos = $auto_videos;
+        }
     } else {
         // Fallback: show message that local_stream plugin is required
         echo $OUTPUT->notification(
             get_string('collectionmode_plugin_required', 'stream', 'local_stream'), 
             'notifywarning'
         );
-    }
-    
-    if (empty($videos)) {
-        echo $OUTPUT->notification(get_string('noresults', 'stream'), 'notifyinfo');
-        echo $OUTPUT->footer();
-        exit;
+        
+        // Still try to show manually selected videos if any
+        if (!empty($stream->identifier) && $stream->identifier !== 'auto_collection' && $stream->identifier !== 'auto_collection_pending') {
+            $identifiers = array_values(array_filter(explode(',', $stream->identifier)));
+            if (!empty($identifiers)) {
+                $videos = mod_stream\stream_video::get_videos_by_id($identifiers);
+            }
+        }
     }
 } else {
     // Regular mode - get videos from identifier field
-    if (empty($stream->identifier) || trim($stream->identifier) === '') {
-        echo $OUTPUT->notification(get_string('noresults', 'stream'), 'notifyinfo');
-        echo $OUTPUT->footer();
-        exit;
+    if (!empty($stream->identifier) && trim($stream->identifier) !== '' && $stream->identifier !== 'auto_collection' && $stream->identifier !== 'auto_collection_pending') {
+        $identifiers = array_values(array_filter(explode(',', $stream->identifier)));
+        if (!empty($identifiers)) {
+            $videos = mod_stream\stream_video::get_videos_by_id($identifiers);
+        }
     }
+}
 
-    $identifiers = array_values(array_filter(explode(',', $stream->identifier)));
-
-    if (empty($identifiers)) {
+// Check if we have any videos before proceeding
+if (empty($videos)) {
+    if ($stream->collection_mode && $auto_collected) {
+        echo $OUTPUT->notification(get_string('noresults', 'stream') . ' - ' . get_string('collectionmode_auto_collected', 'stream'), 'notifyinfo');
+    } else {
         echo $OUTPUT->notification(get_string('noresults', 'stream'), 'notifyinfo');
-        echo $OUTPUT->footer();
-        exit;
     }
-
-    $videos = mod_stream\stream_video::get_videos_by_id($identifiers);
-
-    // Check if we have any videos before proceeding
-    if (empty($videos)) {
-        echo $OUTPUT->notification(get_string('noresults', 'stream'), 'notifyinfo');
-        echo $OUTPUT->footer();
-        exit;
-    }
+    echo $OUTPUT->footer();
+    exit;
 }
 
 // Get viewed videos for the current user.
@@ -125,8 +164,8 @@ foreach ($videos as $video) {
     $video->viewed = in_array($video->id, $viewedvideoids);
 }
 
-// Apply custom order if available and not in collection mode
-if (!$stream->collection_mode && !empty($stream->video_order)) {
+// Apply custom order if available
+if (!empty($stream->video_order)) {
     $videoOrder = json_decode($stream->video_order, true);
     if (is_array($videoOrder) && !empty($videoOrder)) {
         $orderedVideos = [];
@@ -145,7 +184,7 @@ if (!$stream->collection_mode && !empty($stream->video_order)) {
             }
         }
         
-        // Add any remaining videos that weren't in the order
+        // Add any remaining videos that weren't in the order (new auto-collected videos)
         foreach ($videoMap as $video) {
             $orderedVideos[] = $video;
         }
@@ -154,19 +193,27 @@ if (!$stream->collection_mode && !empty($stream->video_order)) {
     }
 }
 
+if (!empty($videos)) {
+    $videos[0]->active = true;
+}
+
+$first_video_identifier = !empty($videos) ? $videos[0]->id : '';
+$initial_player = !empty($first_video_identifier) ? mod_stream\stream_video::player($cm->id, $first_video_identifier, $includeaudio) : '';
+
 // Determine if we should show the playlist sidebar (only show if more than 1 video)
 $show_playlist = count($videos) > 1;
 
 $template_data = [
     'cmid' => $cm->id,
-    'includeaudio' => false,
+    'includeaudio' => $includeaudio,
     'videos' => $videos,
-    'initial_player' => null,
+    'initial_player' => $initial_player,
     'show_playlist' => $show_playlist,
     'single_video' => !$show_playlist,
     'stream_id' => $stream->id,
     'course_id' => $course->id,
-    'collection_mode' => $stream->collection_mode
+    'collection_mode' => $stream->collection_mode,
+    'auto_collected' => $auto_collected
 ];
 
 // Add current video (first video by default)
