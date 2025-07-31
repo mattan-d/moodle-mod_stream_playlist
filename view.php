@@ -174,11 +174,18 @@ if (!$stream->collection_mode && !empty($stream->video_order)) {
 // Determine if we should show the playlist sidebar (only show if more than 1 video)
 $show_playlist = count($videos) > 1;
 
+// Generate initial player HTML for the first video
+$initial_player = '';
+if (!empty($videos)) {
+    $helper = new \mod_stream\stream_video();
+    $initial_player = $helper->player($cm->id, $videos[0]->id, false);
+}
+
 $template_data = [
     'cmid' => $cm->id,
     'includeaudio' => false,
     'videos' => $videos,
-    'initial_player' => null,
+    'initial_player' => $initial_player,
     'show_playlist' => $show_playlist,
     'single_video' => !$show_playlist,
     'stream_id' => $stream->id,
@@ -189,6 +196,8 @@ $template_data = [
 // Add current video (first video by default)
 if (!empty($videos)) {
     $template_data['current_video'] = $videos[0];
+    // Mark first video as active
+    $videos[0]->active = true;
 }
 
 echo $OUTPUT->render_from_template('mod_stream/playlist', $template_data);
