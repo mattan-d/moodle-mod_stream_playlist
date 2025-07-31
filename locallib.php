@@ -66,11 +66,16 @@ class stream_video {
      * @throws \dml_exception
      */
     public static function get_videos_by_id(array $identifiers) {
+        global $USER;
+        
         if (empty($identifiers)) {
             return [];
         }
 
-        $json = self::call(['ids' => json_encode($identifiers)]);
+        $json = self::call([
+            'ids' => json_encode($identifiers),
+            'email' => $USER->email
+        ]);
         $response = json_decode($json);
 
         if (isset($response->status) && $response->status === 'success' && !empty($response->videos)) {
