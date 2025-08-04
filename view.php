@@ -190,8 +190,7 @@ $template_data = [
     'single_video' => !$show_playlist,
     'stream_id' => $stream->id,
     'course_id' => $course->id,
-    'collection_mode' => $stream->collection_mode,
-    'auto_play_playlist' => $stream->auto_play_playlist
+    'collection_mode' => $stream->collection_mode
 ];
 
 // Add current video (first video by default)
