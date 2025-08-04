@@ -11,6 +11,7 @@
                 <FIELD NAME="identifier" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
                 <FIELD NAME="video_order" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON array storing the order of video identifiers"/>
                 <FIELD NAME="collection_mode" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" COMMENT="Enable automatic video collection mode"/>
+                <FIELD NAME="auto_play_playlist" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" COMMENT="Enable automatic playlist playing"/>
                 <FIELD NAME="intro" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
                 <FIELD NAME="introformat" TYPE="int" LENGTH="4" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false"/>
                 <FIELD NAME="grade" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="100" SEQUENCE="false"/>
@@ -23,6 +24,7 @@
             <INDEXES>
                 <INDEX NAME="course" UNIQUE="false" FIELDS="course"/>
                 <INDEX NAME="collection_mode" UNIQUE="false" FIELDS="collection_mode"/>
+                <INDEX NAME="auto_play_playlist" UNIQUE="false" FIELDS="auto_play_playlist"/>
             </INDEXES>
         </TABLE>
         <TABLE NAME="stream_viewed_videos" COMMENT="Tracks which user has viewed which video in a stream instance.">
@@ -36,7 +38,7 @@
             <KEYS>
                 <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
                 <KEY NAME="streamid" TYPE="foreign" FIELDS="streamid" REFTABLE="stream" REFFIELDS="id"/>
-                <FIELD NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+                <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
             </KEYS>
             <INDEXES>
                 <INDEX NAME="stream_user_video" UNIQUE="true" FIELDS="streamid, userid, videoid"/>

@@ -76,3 +76,8 @@ $string['playlistorder'] = 'Playlist Order';
 $string['playlistorder_help'] = 'Drag and drop videos to change their order in the playlist.';
 $string['selectedvideos'] = 'Selected Videos';
 $string['dragtoorder'] = 'Drag to reorder';
+$string['autoplayplaylist'] = 'Auto Play Playlist';
+$string['autoplayplaylist_desc'] = 'Automatically advance to the next video when the current video finishes playing.';
+$string['autoplayplaylist_help'] = 'When enabled, videos in the playlist will automatically advance to the next video when the current video ends. This creates a continuous viewing experience for users.';
+$string['autoplayenabled'] = 'Auto-play is enabled - videos will advance automatically';
+?>

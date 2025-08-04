@@ -28,12 +28,23 @@
             { "id": "vid2", "title": "Video 2", "thumbnail": "url/to/thumb2.jpg", "duration": "05:30", "viewed": false }
         ],
         "initial_player": "<iframe...>",
-        "show_playlist": true
+        "show_playlist": true,
+        "auto_play_playlist": true
     }
 }}
-<div class="stream-playlist-container {{#show_playlist}}with-playlist{{/show_playlist}}{{^show_playlist}}single-video{{/show_playlist}}" data-cmid="{{cmid}}" data-includeaudio="{{includeaudio}}">
+<div class="stream-playlist-container {{#show_playlist}}with-playlist{{/show_playlist}}{{^show_playlist}}single-video{{/show_playlist}}" 
+     data-cmid="{{cmid}}" 
+     data-includeaudio="{{includeaudio}}"
+     data-autoplayplaylist="{{auto_play_playlist}}">
     {{#show_playlist}}
     <div class="stream-playlist-sidebar">
+        {{#auto_play_playlist}}
+        <div class="playlist-controls mb-3">
+            <div class="alert alert-info">
+                <i class="fa fa-play-circle"></i> {{#str}}autoplayenabled, mod_stream{{/str}}
+            </div>
+        </div>
+        {{/auto_play_playlist}}
         <ul class="list-group">
             {{#videos}}
             <li class="list-group-item playlist-item {{#active}}active{{/active}}" data-identifier="{{id}}">
@@ -42,10 +53,10 @@
                     <div class="playlist-item-details">
                         <div class="playlist-item-title">{{title}}</div>
                         <div class="playlist-item-duration">{{duration}}</div>
+                        {{#viewed}}
+                            <span class="badge badge-success playlist-viewed-badge">{{#str}}viewed, mod_stream{{/str}}</span>
+                        {{/viewed}}
                     </div>
-                    {{#viewed}}
-                        <span class="badge badge-success playlist-viewed-badge">{{#str}}viewed, mod_stream{{/str}}</span>
-                    {{/viewed}}
                 </div>
             </li>
             {{/videos}}

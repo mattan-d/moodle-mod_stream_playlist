@@ -124,5 +124,25 @@ function xmldb_stream_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2024121104, 'stream');
     }
 
+    if ($oldversion < 2024121105) {
+        // Define table stream to be altered.
+        $table = new xmldb_table('stream');
+        $field = new xmldb_field('auto_play_playlist', XMLDB_TYPE_INTEGER, '1', true, XMLDB_NOTNULL, null, '0', 'collection_mode');
+
+        // Conditionally launch add field auto_play_playlist.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Add index for auto_play_playlist.
+        $index = new xmldb_index('auto_play_playlist', XMLDB_INDEX_NOTUNIQUE, ['auto_play_playlist']);
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Stream savepoint reached.
+        upgrade_mod_savepoint(true, 2024121105, 'stream');
+    }
+
     return true;
 }

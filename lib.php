@@ -68,6 +68,11 @@ function stream_add_instance(stdClass $stream, $mform = null) {
         $stream->collection_mode = 0;
     }
     
+    // Ensure auto_play_playlist is properly handled
+    if (!isset($stream->auto_play_playlist)) {
+        $stream->auto_play_playlist = 0;
+    }
+    
     // If collection mode is enabled but no manual selection, set to auto_collection
     if ($stream->collection_mode && (empty($stream->identifier) || trim($stream->identifier) === '')) {
         $stream->identifier = 'auto_collection';
@@ -101,6 +106,11 @@ function stream_update_instance(stdClass $stream, $mform = null) {
     // Ensure collection_mode is properly handled
     if (!isset($stream->collection_mode)) {
         $stream->collection_mode = 0;
+    }
+    
+    // Ensure auto_play_playlist is properly handled
+    if (!isset($stream->auto_play_playlist)) {
+        $stream->auto_play_playlist = 0;
     }
     
     // If collection mode is enabled but no manual selection, set to auto_collection

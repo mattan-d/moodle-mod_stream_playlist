@@ -76,3 +76,7 @@ $string['playlistorder'] = 'סדר רשימת ההשמעה';
 $string['playlistorder_help'] = 'גרור ושחרר סרטונים כדי לשנות את הסדר ברשימת ההשמעה.';
 $string['selectedvideos'] = 'סרטונים נבחרים';
 $string['dragtoorder'] = 'גרור לשינוי סדר';
+$string['autoplayplaylist'] = 'השמעה אוטומטית של רשימת השמעה';
+$string['autoplayplaylist_desc'] = 'התקדמות אוטומטית לסרטון הבא כאשר הסרטון הנוכחי מסיים להתנגן.';
+$string['autoplayplaylist_help'] = 'כאשר מופעל, סרטונים ברשימת ההשמעה יתקדמו אוטומטית לסרטון הבא כאשר הסרטון הנוכחי מסתיים. זה יוצר חוויית צפייה רציפה למשתמשים.';
+$string['autoplayenabled'] = 'השמעה אוטומטית מופעלת - סרטונים יתקדמו אוטומטית';

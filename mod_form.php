@@ -61,6 +61,12 @@ class mod_stream_mod_form extends moodleform_mod {
         $mform->addHelpButton('collection_mode', 'collectionmode', 'stream');
         $mform->setDefault('collection_mode', 0);
 
+        // Auto Playlist Playing
+        $mform->addElement('advcheckbox', 'auto_play_playlist', get_string('autoplayplaylist', 'stream'), 
+                          get_string('autoplayplaylist_desc', 'stream'));
+        $mform->addHelpButton('auto_play_playlist', 'autoplayplaylist', 'stream');
+        $mform->setDefault('auto_play_playlist', 0);
+
         $mform->addElement('hidden', 'identifier');
         $mform->setType('identifier', PARAM_TEXT);
         $mform->addRule('identifier', null, 'required', null, 'client');
@@ -79,6 +85,9 @@ class mod_stream_mod_form extends moodleform_mod {
                 // Set default for collection_mode
                 $mform->setDefault('collection_mode', $stream->collection_mode ?? 0);
                 
+                // Set default for auto_play_playlist
+                $mform->setDefault('auto_play_playlist', $stream->auto_play_playlist ?? 0);
+                
                 // Set default for video_order
                 if (!empty($stream->video_order)) {
                     $mform->setDefault('video_order', $stream->video_order);
@@ -95,6 +104,7 @@ class mod_stream_mod_form extends moodleform_mod {
         } else {
             // For new instances, set empty defaults
             $mform->setDefault('video_order', '[]');
+            $mform->setDefault('auto_play_playlist', 0);
         }
 
         $this->standard_intro_elements();
