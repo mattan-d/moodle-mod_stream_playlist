@@ -336,10 +336,21 @@ define(['jquery', 'jqueryui', 'core/ajax', 'core/notification', 'core/str', 'cor
   list: (response, self) => {
     if (response.status == 'success') {
       if (response.videos.length) {
-        // Store all videos for pagination
+        // Store all videos and prioritize selected ones
         self.allVideos = response.videos;
-        self.totalVideos = response.videos.length;
         
+        // Sort videos to show selected ones first
+        self.allVideos.sort((a, b) => {
+          const aSelected = self.selectedIds.indexOf(a.id.toString()) > -1;
+          const bSelected = self.selectedIds.indexOf(b.id.toString()) > -1;
+          
+          if (aSelected && !bSelected) return -1;
+          if (!aSelected && bSelected) return 1;
+          return 0; // Keep original order for videos with same selection status
+        });
+        
+        self.totalVideos = response.videos.length;
+      
         // Calculate pagination
         const totalPages = Math.ceil(self.totalVideos / self.itemsPerPage);
         const startIndex = (self.currentPage - 1) * self.itemsPerPage;
@@ -469,6 +480,16 @@ define(['jquery', 'jqueryui', 'core/ajax', 'core/notification', 'core/str', 'cor
     if (self.allVideos.length === 0) {
       return;
     }
+    
+    // Re-sort videos to show selected ones first (in case selection changed)
+    self.allVideos.sort((a, b) => {
+      const aSelected = self.selectedIds.indexOf(a.id.toString()) > -1;
+      const bSelected = self.selectedIds.indexOf(b.id.toString()) > -1;
+      
+      if (aSelected && !bSelected) return -1;
+      if (!aSelected && bSelected) return 1;
+      return 0; // Keep original order for videos with same selection status
+    });
     
     // Calculate pagination
     const totalPages = Math.ceil(self.totalVideos / self.itemsPerPage);
