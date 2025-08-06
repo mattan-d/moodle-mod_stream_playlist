@@ -47,6 +47,11 @@ define(['jquery', 'jqueryui', 'core/ajax', 'core/notification', 'core/str', 'cor
       this.videoOrder = [];
     }
 
+    this.currentPage = 1;
+    this.itemsPerPage = 12; // 3 rows of 4 items
+    this.totalVideos = 0;
+    this.allVideos = []; // Store all videos for pagination
+
     // Initialize sortable playlist
     this.initSortablePlaylist();
 
@@ -114,6 +119,16 @@ define(['jquery', 'jqueryui', 'core/ajax', 'core/notification', 'core/str', 'cor
         }.bind(this),
         false,
     );
+
+    // Pagination click handler
+    $('body').on('click', '#stream-pagination .page-link[data-page]', function(e) {
+      e.preventDefault();
+      var page = parseInt($(this).data('page'));
+      if (page && page !== self.currentPage) {
+        self.currentPage = page;
+        self.renderCurrentPage();
+      }
+    });
   },
 
   initSortablePlaylist: function() {
@@ -295,6 +310,11 @@ define(['jquery', 'jqueryui', 'core/ajax', 'core/notification', 'core/str', 'cor
   load: function() {
     var sort = $('#stream-load #stream-sort .btn.active').attr('data-name');
 
+    // Reset pagination when loading new data
+    this.currentPage = 1;
+    this.allVideos = [];
+    this.totalVideos = 0;
+
     this.elements.html('<div style="text-align:center"><img height="80" src="' + this.loadingbars + '" ></div>');
 
     ajax.call([
@@ -316,9 +336,19 @@ define(['jquery', 'jqueryui', 'core/ajax', 'core/notification', 'core/str', 'cor
   list: (response, self) => {
     if (response.status == 'success') {
       if (response.videos.length) {
+        // Store all videos for pagination
+        self.allVideos = response.videos;
+        self.totalVideos = response.videos.length;
+        
+        // Calculate pagination
+        const totalPages = Math.ceil(self.totalVideos / self.itemsPerPage);
+        const startIndex = (self.currentPage - 1) * self.itemsPerPage;
+        const endIndex = startIndex + self.itemsPerPage;
+        const videosToShow = self.allVideos.slice(startIndex, endIndex);
+        
         self.elements.html('');
 
-        $.each(response.videos, (key, video) => {
+        $.each(videosToShow, (key, video) => {
           str.get_strings([
             {key: 'views', component: 'mod_stream'},
             {key: 'before', component: 'mod_stream'},
@@ -349,23 +379,150 @@ define(['jquery', 'jqueryui', 'core/ajax', 'core/notification', 'core/str', 'cor
                 ' ' +
                 video.elapsed +
                 '</span></span></div>';
-            self.elements.append(html);
+          self.elements.append(html);
 
-            if (self.selectedIds.indexOf(video.id.toString()) > -1) {
-              $('#video_identifier_' + video.id).find('.item').addClass('selected');
-            }
+          if (self.selectedIds.indexOf(video.id.toString()) > -1) {
+            $('#video_identifier_' + video.id).find('.item').addClass('selected');
+          }
 
-            // Update playlist after adding videos
-            self.updatePlaylistOrder();
+          // Update playlist after adding videos
+          self.updatePlaylistOrder();
 
-            return null;
-          }).catch((error) => self.failed(error, self));
+          return null;
+        }).catch((error) => self.failed(error, self));
         });
+        
+        // Update pagination controls
+        self.updatePagination(totalPages);
       } else {
         return str.get_string('noresults', 'mod_stream').
             then((noresults) => self.elements.html('<div class="alert alert-info">' + noresults + '</div>'));
       }
     }
     return true;
+  },
+
+  updatePagination: function(totalPages) {
+    var self = this;
+    var paginationContainer = $('#stream-pagination');
+    
+    if (totalPages <= 1) {
+      paginationContainer.html('');
+      return;
+    }
+    
+    var paginationHtml = '<nav aria-label="Video pagination"><ul class="pagination justify-content-center">';
+    
+    // Previous button
+    if (self.currentPage > 1) {
+      paginationHtml += '<li class="page-item"><a class="page-link" href="#" data-page="' + (self.currentPage - 1) + '">&laquo; Previous</a></li>';
+    } else {
+      paginationHtml += '<li class="page-item disabled"><span class="page-link">&laquo; Previous</span></li>';
+    }
+    
+    // Page numbers
+    var startPage = Math.max(1, self.currentPage - 2);
+    var endPage = Math.min(totalPages, self.currentPage + 2);
+    
+    if (startPage > 1) {
+      paginationHtml += '<li class="page-item"><a class="page-link" href="#" data-page="1">1</a></li>';
+      if (startPage > 2) {
+        paginationHtml += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+      }
+    }
+    
+    for (var i = startPage; i <= endPage; i++) {
+      if (i === self.currentPage) {
+        paginationHtml += '<li class="page-item active"><span class="page-link">' + i + '</span></li>';
+      } else {
+        paginationHtml += '<li class="page-item"><a class="page-link" href="#" data-page="' + i + '">' + i + '</a></li>';
+      }
+    }
+    
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        paginationHtml += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+      }
+      paginationHtml += '<li class="page-item"><a class="page-link" href="#" data-page="' + totalPages + '">' + totalPages + '</a></li>';
+    }
+    
+    // Next button
+    if (self.currentPage < totalPages) {
+      paginationHtml += '<li class="page-item"><a class="page-link" href="#" data-page="' + (self.currentPage + 1) + '">Next &raquo;</a></li>';
+    } else {
+      paginationHtml += '<li class="page-item disabled"><span class="page-link">Next &raquo;</span></li>';
+    }
+    
+    paginationHtml += '</ul></nav>';
+    
+    // Show results info
+    var startItem = (self.currentPage - 1) * self.itemsPerPage + 1;
+    var endItem = Math.min(self.currentPage * self.itemsPerPage, self.totalVideos);
+    var infoHtml = '<div class="text-center mb-3"><small class="text-muted">Showing ' + startItem + '-' + endItem + ' of ' + self.totalVideos + ' videos</small></div>';
+    
+    paginationContainer.html(infoHtml + paginationHtml);
+  },
+
+  renderCurrentPage: function() {
+    var self = this;
+    
+    if (self.allVideos.length === 0) {
+      return;
+    }
+    
+    // Calculate pagination
+    const totalPages = Math.ceil(self.totalVideos / self.itemsPerPage);
+    const startIndex = (self.currentPage - 1) * self.itemsPerPage;
+    const endIndex = startIndex + self.itemsPerPage;
+    const videosToShow = self.allVideos.slice(startIndex, endIndex);
+    
+    self.elements.html('');
+
+    $.each(videosToShow, (key, video) => {
+      str.get_strings([
+        {key: 'views', component: 'mod_stream'},
+        {key: 'before', component: 'mod_stream'},
+      ]).then((string) => {
+        var html =
+            '<div class="col list-item-grid" data-itemid="' +
+            video.id +
+            '" id="video_identifier_' +
+            video.id +
+            '">' +
+            '<span class="item"><div class="thumbnail">' +
+            '<img src="' +
+            video.thumbnail +
+            '" class="img-fluid img-rounded">' +
+            '<span class="datecreated">' +
+            video.datecreated +
+            '</span><span class="duration">' +
+            video.duration +
+            '</span></div><span class="title">' +
+            video.title +
+            '</span><span class="details">' +
+            video.views +
+            ' ' +
+            string[0] +
+            ' <span class="bubble">●</span>' +
+            ' ' +
+            string[1] +
+            ' ' +
+            video.elapsed +
+            '</span></span></div>';
+        self.elements.append(html);
+
+        if (self.selectedIds.indexOf(video.id.toString()) > -1) {
+          $('#video_identifier_' + video.id).find('.item').addClass('selected');
+        }
+
+        // Update playlist after adding videos
+        self.updatePlaylistOrder();
+
+        return null;
+      }).catch((error) => self.failed(error, self));
+    });
+    
+    // Update pagination controls
+    self.updatePagination(totalPages);
   },
 }));
