@@ -56,8 +56,8 @@ class mod_stream_mod_form extends moodleform_mod {
         $mform->addRule('name', get_string('maximumchars', '', 255), 'maxlength', 255, 'client');
 
         // Video Recordings Collection Mode
-        $mform->addElement('advcheckbox', 'collection_mode', get_string('collectionmode', 'stream'), 
-                          get_string('collectionmode_desc', 'stream'));
+        $mform->addElement('advcheckbox', 'collection_mode', get_string('collectionmode', 'stream'),
+                get_string('collectionmode_desc', 'stream'));
         $mform->addHelpButton('collection_mode', 'collectionmode', 'stream');
         $mform->setDefault('collection_mode', 0);
 
@@ -75,10 +75,10 @@ class mod_stream_mod_form extends moodleform_mod {
             if ($stream) {
                 // Set default for identifier
                 $mform->setDefault('identifier', $stream->identifier);
-                
+
                 // Set default for collection_mode
                 $mform->setDefault('collection_mode', $stream->collection_mode ?? 0);
-                
+
                 // Set default for video_order
                 if (!empty($stream->video_order)) {
                     $mform->setDefault('video_order', $stream->video_order);
@@ -103,6 +103,8 @@ class mod_stream_mod_form extends moodleform_mod {
         $mform->addElement('html', '<div id="video-search-container">');
         $mform->addElement('html', $OUTPUT->render_from_template('mod_stream/search', [
                 'endpoint' => get_config('stream', 'apiendpoint'),
+                'token' => get_config('stream', 'accountid'),
+                'email' => $USER->email,
         ]));
         $mform->addElement('html', '</div>');
 
@@ -143,6 +145,7 @@ class mod_stream_mod_form extends moodleform_mod {
 
     /**
      * Perform minimal validation on the settings form
+     *
      * @param array $data
      * @param array $files
      */
